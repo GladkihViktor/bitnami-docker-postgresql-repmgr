@@ -1,9 +1,9 @@
 version: '2'
 services:
   pg-0:
-    image: docker.io/bitnami/postgresql-repmgr:11-debian-10
+    image: vgladkih7/postgres_instance_for_pgpooll2:v.0.1    
     ports:
-      - 5432
+      - 5433:5432
     volumes:
       - pg_0_data:/bitnami/postgresql
     environment:
@@ -19,9 +19,9 @@ services:
       - REPMGR_NODE_NETWORK_NAME=pg-0
       - REPMGR_PORT_NUMBER=5432
   pg-1:
-    image: docker.io/bitnami/postgresql-repmgr:11-debian-10
+    image: vgladkih7/postgres_instance_for_pgpooll2:v.0.1
     ports:
-      - 5432
+      - 5434:5432
     volumes:
       - pg_1_data:/bitnami/postgresql
     environment:
@@ -36,6 +36,39 @@ services:
       - REPMGR_NODE_NAME=pg-1
       - REPMGR_NODE_NETWORK_NAME=pg-1
       - REPMGR_PORT_NUMBER=5432
+
+  pgpool:
+    image: bitnami/pgpool:4
+    ports:
+      - 5432:5432
+    environment:
+      - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432
+      - PGPOOL_SR_CHECK_USER=customuser
+      - PGPOOL_SR_CHECK_PASSWORD=custompassword
+      - PGPOOL_ENABLE_LDAP=no
+      - PGPOOL_POSTGRES_USERNAME=postgres
+      - PGPOOL_POSTGRES_PASSWORD=adminpassword
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=adminpassword
+    healthcheck:
+      test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on: 
+      - pg-0
+      - pg-1
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=adminpass
+      - PGADMIN_LISTEN_PORT=80
+    ports:
+      - "5431:80"
+    links:
+      - "pgpool"
 volumes:
   pg_0_data:
     driver: local
