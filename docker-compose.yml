@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 services:
   pg-0:
     image: vgladkih7/postgres_instance_for_pgpooll2:v.0.1    
