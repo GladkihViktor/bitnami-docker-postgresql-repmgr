@@ -1,35 +1,44 @@
-version: '2.1'
+version: '3'
+
+networks:
+  database-network:
+    driver: bridge
+
 services:
   pg-0:
     image: vgladkih7/postgres_instance_for_pgpooll2:v.0.1    
+    networks:
+        - database-network
     ports:
-      - 5433:5432
+     - 5432
     volumes:
       - pg_0_data:/bitnami/postgresql
     environment:
-      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-      - POSTGRESQL_USERNAME=customuser
-      - POSTGRESQL_PASSWORD=custompassword
-      - POSTGRESQL_DATABASE=customdatabase
-      - REPMGR_PASSWORD=repmgrpassword
+      - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
+      - POSTGRESQL_USERNAME=${POSTGRESQL_USERNAME}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+      - REPMGR_PASSWORD=${REPMGR_PASSWORD}
       - REPMGR_PRIMARY_HOST=pg-0
-      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PRIMARY_PORT=5432      
       - REPMGR_PARTNER_NODES=pg-0,pg-1:5432
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_NETWORK_NAME=pg-0
       - REPMGR_PORT_NUMBER=5432
   pg-1:
     image: vgladkih7/postgres_instance_for_pgpooll2:v.0.1
+    networks:
+        - database-network
     ports:
-      - 5434:5432
+     - 5432
     volumes:
       - pg_1_data:/bitnami/postgresql
     environment:
-      - POSTGRESQL_POSTGRES_PASSWORD=adminpassword
-      - POSTGRESQL_USERNAME=customuser
-      - POSTGRESQL_PASSWORD=custompassword
-      - POSTGRESQL_DATABASE=customdatabase
-      - REPMGR_PASSWORD=repmgrpassword
+      - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRESQL_POSTGRES_PASSWORD}
+      - POSTGRESQL_USERNAME=${POSTGRESQL_USERNAME}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_DATABASE=${POSTGRESQL_DATABASE}
+      - REPMGR_PASSWORD=${REPMGR_PASSWORD}
       - REPMGR_PRIMARY_HOST=pg-0
       - REPMGR_PRIMARY_PORT=5432
       - REPMGR_PARTNER_NODES=pg-0,pg-1:5432
@@ -39,36 +48,38 @@ services:
 
   pgpool:
     image: bitnami/pgpool:4
+    networks:
+        - database-network
     ports:
       - 5432:5432
-    environment:
+    environment:    
       - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432
-      - PGPOOL_SR_CHECK_USER=customuser
-      - PGPOOL_SR_CHECK_PASSWORD=custompassword
+      - PGPOOL_SR_CHECK_USER=${POSTGRESQL_USERNAME}
+      - PGPOOL_SR_CHECK_PASSWORD=${POSTGRESQL_PASSWORD}
       - PGPOOL_ENABLE_LDAP=no
-      - PGPOOL_POSTGRES_USERNAME=postgres
-      - PGPOOL_POSTGRES_PASSWORD=adminpassword
-      - PGPOOL_ADMIN_USERNAME=admin
-      - PGPOOL_ADMIN_PASSWORD=adminpassword
+      - PGPOOL_POSTGRES_USERNAME=${PGPOOL_POSTGRES_USERNAME}
+      - PGPOOL_POSTGRES_PASSWORD=${PGPOOL_POSTGRES_PASSWORD}
+      - PGPOOL_ADMIN_USERNAME=${PGPOOL_ADMIN_USERNAME}
+      - PGPOOL_ADMIN_PASSWORD=${PGPOOL_ADMIN_PASSWORD}
     healthcheck:
       test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
       interval: 10s
       timeout: 5s
       retries: 5
-    depends_on: 
-      - pg-0
-      - pg-1
 
   pgadmin:
     image: dpage/pgadmin4
+    networks:
+        - database-network
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=adminpass
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
       - PGADMIN_LISTEN_PORT=80
     ports:
       - "5431:80"
     links:
       - "pgpool"
+      
 volumes:
   pg_0_data:
     driver: local
