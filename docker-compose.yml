@@ -62,14 +62,16 @@ services:
       - PGPOOL_POSTGRES_PASSWORD=${PGPOOL_POSTGRES_PASSWORD}
       - PGPOOL_ADMIN_USERNAME=${PGPOOL_ADMIN_USERNAME}
       - PGPOOL_ADMIN_PASSWORD=${PGPOOL_ADMIN_PASSWORD}
-      - ADDED_USERS=${ADDED_USERS}
+      # - PGPOOL_ENABLE_POOL_PASSWD=no
+      - PGPOOL_ENABLE_POOL_HBA=no
+      # - ADDED_USERS=${ADDED_USERS}
     healthcheck:
       test: ["CMD", "/opt/bitnami/scripts/pgpool/healthcheck.sh"]
       interval: 10s
       timeout: 5s
       retries: 5
-    volumes:
-      - ./pgpool_scripts:/docker-entrypoint-initdb.d
+    # volumes:
+    #   - ./pgpool_scripts:/docker-entrypoint-initdb.d
 
   pgadmin:
     image: dpage/pgadmin4
